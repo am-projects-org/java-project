@@ -24,7 +24,7 @@
 		<h1>${title}</h1>
 		<p>
 			<c:if test="${not empty msg}">
-				Hello ${msg}
+				Hello Everyone!
 			</c:if>
 
 			<c:if test="${empty msg}">
@@ -41,7 +41,7 @@
 	<div class="row">
 		<div class="col-md-8">
 			<h2>Azure DevOps</h2>
-			<img src="https://p2zk82o7hr3yb6ge7gzxx4ki-wpengine.netdna-ssl.com/wp-content/uploads/Azure-DevOps-3.png" alt="lamp" width="32" height="32">
+			<img src="https://p2zk82o7hr3yb6ge7gzxx4ki-wpengine.netdna-ssl.com/wp-content/uploads/Azure-DevOps-3.png" alt="lamp">
 			<p> Azure DevOps Server is a Microsoft product that provides version control, reporting, requirements management, project management, automated builds, testing and release management capabilities. </p>
 		</div>	
 	</div>
