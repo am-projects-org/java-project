@@ -41,8 +41,8 @@ pipeline{
             steps{
                 echo "push the compose file to the prod server"
                 sh "sed 's/BUILD_NUMBER/${BUILD_NUMBER}/' docker-compose.yml "
-                sh "scp docker-compose.yml azureuser@20.204.66.252: ."
                 sshagent(['docker_prod_machine_sshAgent']) {
+                  sh "scp docker-compose.yml azureuser@20.204.66.252: ."
                     echo "making ssh connection to the prod server"
                     sh "ssh -o StrictHostKeyChecking=no azureuser@20.204.66.252 docker rm -f javawebappcontainer || true"
                     echo "docker pull and run"
