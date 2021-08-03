@@ -1,0 +1,11 @@
+version: "3.1"
+services:
+    java-project: 
+        image: registryazureacr.azurecr.io/java-project:BUILD_NUMBER
+        port:
+        - 9090:9090
+        networks:
+        - javabridge
+
+networks:
+    javabridge: bridge

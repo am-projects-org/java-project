@@ -1,40 +1,58 @@
-node{
-     
-    stage('SCM Checkout'){
-        git url: 'https://github.com/MithunTechnologiesDevOps/java-web-app-docker.git',branch: 'master'
-    }
-    
-    stage(" Maven Clean Package"){
-      def mavenHome =  tool name: "Maven-3.5.6", type: "maven"
-      def mavenCMD = "${mavenHome}/bin/mvn"
-      sh "${mavenCMD} clean package"
-      
-    } 
-    
-    
-    stage('Build Docker Image'){
-        sh 'docker build -t dockerhandson/java-web-app .'
-    }
-    
-    stage('Push Docker Image'){
-        withCredentials([string(credentialsId: 'Docker_Hub_Pwd', variable: 'Docker_Hub_Pwd')]) {
-          sh "docker login -u dockerhandson -p ${Docker_Hub_Pwd}"
+pipeline{
+    agent any;
+    stages{
+        stage('clean workspace'){
+            steps{
+                cleanWs()   
+            }
         }
-        sh 'docker push dockerhandson/java-web-app'
-     }
-     
-      stage('Run Docker Image In Dev Server'){
-        
-        def dockerRun = ' docker run  -d -p 8080:8080 --name java-web-app dockerhandson/java-web-app'
-         
-         sshagent(['DOCKER_SERVER']) {
-          sh 'ssh -o StrictHostKeyChecking=no ubuntu@172.31.20.72 docker stop java-web-app || true'
-          sh 'ssh  ubuntu@172.31.20.72 docker rm java-web-app || true'
-          sh 'ssh  ubuntu@172.31.20.72 docker rmi -f  $(docker images -q) || true'
-          sh "ssh  ubuntu@172.31.20.72 ${dockerRun}"
-       }
-       
+        stage('pull the code'){
+            steps{
+                echo "pulling the code from the master branch"
+                git url: "https://github.com/am-projects-org/java-project.git", branch: "master"
+                //sh "git clone https://github.com/am-projects-org/java-project.git"    
+            }
+        }
+        stage('maven build'){
+            steps{
+                echo "Running the maven clean package command"
+                sh "ls -l"
+                sh "mvn clean package"
+                //sh "cd /var/lib/jenkins/workspace/BuildJob-web-application/java-project && mvn clean package"
+            }
+        }
+        stage('docker build image'){
+            steps{
+                echo "building the dockerfile to a image"
+                sh "docker build -t registryazureacr.azurecr.io/java-project:${BUILD_NUMBER} ."
+            }
+        }
+        stage('docker login and push image'){
+           steps{
+                 withCredentials([usernamePassword(credentialsId: 'azure_acr_cred', passwordVariable: 'password', usernameVariable: 'username')]) {
+                    echo "docker login"
+                    sh "docker login -u $username -p $password registryazureacr.azurecr.io"
+                }
+                echo "pushing the docker image"
+                sh "docker push registryazureacr.azurecr.io/java-project:${BUILD_NUMBER}"
+            }
+        }
+        stage('deploy docker image and run the application'){
+            steps{
+                echo "push the compose file to the prod server"
+                sh "sed 's/BUILD_NUMBER/${BUILD_NUMBER}/' docker-compose.yml "
+                sh "scp docker-compose.yml azureuser@20.204.66.252: ."
+                sshagent(['docker_prod_machine_sshAgent']) {
+                    echo "making ssh connection to the prod server"
+                    sh "ssh -o StrictHostKeyChecking=no azureuser@20.204.66.252 docker rm -f javawebappcontainer || true"
+                    echo "docker pull and run"
+                    withCredentials([usernamePassword(credentialsId: 'azure_acr_cred', passwordVariable: 'password', usernameVariable: 'username')]) {
+                        echo "docker login"
+                        sh "docker login -u $username -p $password registryazureacr.azurecr.io"
+                        sh "ssh -o StrictHostKeyChecking=no azureuser@20.204.66.252 docker-compose -d up"
+                    }
+                } 
+            }
+        }
     }
-     
-     
 }
