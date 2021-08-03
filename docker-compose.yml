@@ -3,7 +3,7 @@ services:
     java-project: 
         image: registryazureacr.azurecr.io/java-project:BUILD_NUMBER
         port:
-        - 9090:9090
+        - 9090:8080
         networks:
         - javabridge
 
