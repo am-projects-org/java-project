@@ -42,14 +42,14 @@ pipeline{
                 echo "push the compose file to the prod server"
                 sh "sed 's/BUILD_NUMBER/${BUILD_NUMBER}/' docker-compose.yml "
                 sshagent(['docker_prod_machine_sshAgent']) {
-                  sh "sudo scp docker-compose.yml azureuser@20.204.66.252: /home/azureuser/"
+                  sh "scp docker-compose.yml azureuser@20.204.81.251:/home/azureuser/"
                     echo "making ssh connection to the prod server"
-                    sh "ssh -o StrictHostKeyChecking=no azureuser@20.204.66.252 docker rm -f javawebappcontainer || true"
+                    sh "ssh -o StrictHostKeyChecking=no azureuser@20.204.81.251 docker rm -f javawebappcontainer || true"
                     echo "docker pull and run"
                     withCredentials([usernamePassword(credentialsId: 'azure_acr_cred', passwordVariable: 'password', usernameVariable: 'username')]) {
                         echo "docker login"
                         sh "docker login -u $username -p $password registryazureacr.azurecr.io"
-                        sh "ssh -o StrictHostKeyChecking=no azureuser@20.204.66.252 docker-compose -d up"
+                        sh "ssh -o StrictHostKeyChecking=no azureuser@20.204.81.251 docker-compose -d up"
                     }
                 } 
             }
